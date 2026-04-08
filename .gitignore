@@ -1,0 +1,132 @@
+# Virtual Environments (LARGE - don't commit)
+venv/
+.venv/
+env/
+ENV/
+*.egg-info/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Data (Large files - MUST EXCLUDE)
+data/creditcard.csv
+data/*.csv
+*.zip
+*.tar.gz
+*.7z
+*.rar
+
+# ML Models & Results (Large files)
+results/models/*.pth
+results/models/*.pkl
+results/models/*.h5
+results/graphs/*.png
+results/graphs/*.jpg
+results/tables/*.csv
+models/*.pth
+*.h5
+*.model
+*.pt
+*.onnx
+
+# Logs & Output
+*.log
+logs/
+pipeline_output.log
+output/
+*.out
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.prod
+
+# OS
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# Cache & temp
+.cache/
+*.cache
+.pytest_cache/
+htmlcov/
+.coverage
+.eggs/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+*.whl
+
+# Experiments
+experiments/__pycache__/
+experiments/*.log
+experiments/outputs/
+
+# API & Database
+*.db
+*.sqlite
+instance/
+wandb/
+
+# Checkpoint files
+*.ckpt
+checkpoint/
+checkpoints/
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+.tmp/
+
+# IDE-specific
+.vscode/
+.idea/
+*.code-workspace
+
+# Mac
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini

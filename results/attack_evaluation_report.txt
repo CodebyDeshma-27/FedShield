@@ -1,0 +1,48 @@
+================================================================================
+PRIVACY-PRESERVING FRAUD DETECTION: ATTACK EVALUATION REPORT
+================================================================================
+
+Generated: 2026-04-02T18:20:19.101110
+
+EXECUTIVE SUMMARY
+--------------------------------------------------------------------------------
+This report evaluates the privacy protections in our federated fraud detection
+system. We simulated adversarial attacks (Model Inversion, Gradient Leakage) on
+both a vulnerable model and a DP-protected model.
+
+KEY FINDINGS:
+  • Attack difficulty increased by +10258.9%
+  • Model Inversion attack 33.75x harder
+  • Gradient Leakage attack 173.43x harder
+  • Target (+530%) ✅ MET
+
+ATTACK RESULTS COMPARISON
+--------------------------------------------------------------------------------
+
+1. MODEL INVERSION ATTACK
+   Vulnerable Model:
+     • mse: 14.486177309393105
+     • cosine_similarity: 0.5647038531681344
+     • correlation: 0.5354807143020414
+   DP-Protected Model:
+     • mse: 488.889416457189
+     • cosine_similarity: 0.5216834087254933
+     • correlation: 0.4987272588036237
+
+2. GRADIENT LEAKAGE ATTACK
+   Vulnerable Model:
+     • reconstruction_loss: 103.2917709350586
+     • final_loss_history: [103.68389129638672, 104.02523803710938, 103.29093933105469, 103.29110717773438, 103.29109191894531, 103.68364715576172, 104.417724609375, 104.41725158691406, 103.29137420654297, 103.2917709350586]
+   DP-Protected Model:
+     • reconstruction_loss: 17913.849609375
+     • final_loss_history: [17924.599609375, 17912.572265625, 17912.1328125, 17913.564453125, 17911.1328125, 17915.580078125, 17916.08203125, 17919.466796875, 17918.2578125, 17913.849609375]
+     • loss_ratio_improvement: 173.42958953824282
+
+3. SYNTHETIC ATTACK PATTERNS
+   • Normal Transactions : 500
+   • Mule Account Attacks: 300
+   • UPI Burst Attacks   : 300
+
+================================================================================
+CLASSIFICATION: Privacy Protections EFFECTIVE ✅
+================================================================================

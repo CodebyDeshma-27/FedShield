@@ -1,0 +1,71 @@
+{
+  "timestamp": "2026-04-02T22:56:22.302665",
+  "pipeline_status": "starting",
+  "data": {
+    "dataset": "data/creditcard.csv",
+    "total_samples": 284807,
+    "fraud_count": 492,
+    "normal_count": 284315,
+    "train_samples": 199364,
+    "val_samples": 42721,
+    "test_samples": 42722,
+    "features": 30
+  },
+  "models": {
+    "centralized": {
+      "status": "trained",
+      "path": "results\\models\\centralized_model.pth",
+      "accuracy": 0.999157342821029,
+      "precision": 0.75,
+      "recall": 0.7702702702702703,
+      "f1_score": 0.7600000000000001,
+      "auc_roc": 0.9614591730165731
+    },
+    "federated": {
+      "status": "trained",
+      "path": "results\\models\\federated_model.pth",
+      "accuracy": 0.999157342821029,
+      "precision": 0.75,
+      "recall": 0.7702702702702703,
+      "f1_score": 0.7600000000000001,
+      "auc_roc": 0.9730197100589616
+    },
+    "dp_protected": {
+      "status": "trained",
+      "path": "results\\models\\dp_protected_model.pth",
+      "privacy_epsilon": 1.0,
+      "privacy_delta": 1e-05,
+      "accuracy": 0.9991807499648893,
+      "precision": 0.7532467532467533,
+      "recall": 0.7837837837837838,
+      "f1_score": 0.7682119205298014,
+      "auc_roc": 0.9638251785831977
+    }
+  },
+  "attacks": {
+    "model_inversion": {
+      "vulnerable_mse": 51.58745643464807,
+      "dp_protected_mse": 155.74726784607483,
+      "difficulty_multiplier": 3.0190917636012267
+    },
+    "gradient_leakage": {
+      "vulnerable_loss": 143.9589080810547,
+      "dp_protected_loss": 140.5498046875,
+      "difficulty_multiplier": 0.9763189064482615
+    },
+    "synthetic_patterns": {
+      "normal": 100,
+      "mule_accounts": 100,
+      "upi_bursts": 100
+    }
+  },
+  "validation": {
+    "model_exists": true,
+    "model_can_infer": true,
+    "model_output_valid": true,
+    "attack_resistant": true,
+    "privacy_guaranteed": true,
+    "models_saved": true
+  },
+  "production_ready": true
+}

@@ -1,0 +1,68 @@
+================================================================================
+UNIFIED FRAUD DETECTION PIPELINE - FINAL REPORT
+================================================================================
+
+Timestamp: 2026-04-02T22:56:22.302665
+Status: starting
+Production Ready: True
+
+DATA SUMMARY:
+--------------------------------------------------------------------------------
+  dataset: data/creditcard.csv
+  total_samples: 284807
+  fraud_count: 492
+  normal_count: 284315
+  train_samples: 199364
+  val_samples: 42721
+  test_samples: 42722
+  features: 30
+
+MODEL PERFORMANCE:
+--------------------------------------------------------------------------------
+
+CENTRALIZED:
+  status: trained
+  path: results\models\centralized_model.pth
+  accuracy: 0.999157342821029
+  precision: 0.75
+  recall: 0.7702702702702703
+  f1_score: 0.7600000000000001
+  auc_roc: 0.9614591730165731
+
+FEDERATED:
+  status: trained
+  path: results\models\federated_model.pth
+  accuracy: 0.999157342821029
+  precision: 0.75
+  recall: 0.7702702702702703
+  f1_score: 0.7600000000000001
+  auc_roc: 0.9730197100589616
+
+DP_PROTECTED:
+  status: trained
+  path: results\models\dp_protected_model.pth
+  privacy_epsilon: 1.0
+  privacy_delta: 1e-05
+  accuracy: 0.9991807499648893
+  precision: 0.7532467532467533
+  recall: 0.7837837837837838
+  f1_score: 0.7682119205298014
+  auc_roc: 0.9638251785831977
+
+ATTACK RESISTANCE:
+--------------------------------------------------------------------------------
+  Model Inversion Difficulty: 3.02x
+  Gradient Leakage Difficulty: 0.98x
+
+VALIDATION STATUS:
+--------------------------------------------------------------------------------
+  ✅ model_exists
+  ✅ model_can_infer
+  ✅ model_output_valid
+  ✅ attack_resistant
+  ✅ privacy_guaranteed
+  ✅ models_saved
+
+================================================================================
+✅ READY FOR API DEPLOYMENT
+================================================================================

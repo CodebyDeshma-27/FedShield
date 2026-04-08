@@ -1,0 +1,77 @@
+{
+  "timestamp": "2026-04-02T18:20:19.101110",
+  "vulnerable_model": {
+    "model_inversion": {
+      "mse": 14.486177309393105,
+      "cosine_similarity": 0.5647038531681344,
+      "correlation": 0.5354807143020414
+    },
+    "gradient_leakage": {
+      "reconstruction_loss": 103.2917709350586,
+      "final_loss_history": [
+        103.68389129638672,
+        104.02523803710938,
+        103.29093933105469,
+        103.29110717773438,
+        103.29109191894531,
+        103.68364715576172,
+        104.417724609375,
+        104.41725158691406,
+        103.29137420654297,
+        103.2917709350586
+      ]
+    }
+  },
+  "dp_protected_model": {
+    "model_inversion": {
+      "mse": 488.889416457189,
+      "cosine_similarity": 0.5216834087254933,
+      "correlation": 0.4987272588036237
+    },
+    "gradient_leakage": {
+      "reconstruction_loss": 17913.849609375,
+      "final_loss_history": [
+        17924.599609375,
+        17912.572265625,
+        17912.1328125,
+        17913.564453125,
+        17911.1328125,
+        17915.580078125,
+        17916.08203125,
+        17919.466796875,
+        17918.2578125,
+        17913.849609375
+      ],
+      "loss_ratio_improvement": 173.42958953824282
+    }
+  },
+  "synthetic_attacks": {
+    "normal_transactions": {
+      "count": 500,
+      "magnitude": 1.8305098246641298
+    },
+    "mule_attacks": {
+      "count": 300,
+      "magnitude": 7.9142484707584675,
+      "type": "Mule Account Fraud"
+    },
+    "burst_attacks": {
+      "count": 300,
+      "magnitude": 14.626439064807904,
+      "type": "UPI Burst Attack"
+    }
+  },
+  "privacy_metrics": {
+    "model_inversion_difficulty": 33.74868139930213,
+    "gradient_leakage_difficulty": 173.42958953824282,
+    "average_difficulty": 103.58913546877247,
+    "difficulty_percentage": 10258.913546877247,
+    "target_met": true
+  },
+  "conclusions": {
+    "privacy_protection_effective": true,
+    "dp_vs_vulnerable_improvement": "Significant",
+    "estimated_attack_resistance": "+530%",
+    "recommendation": "Deploy DP-protected model for privacy-critical applications"
+  }
+}
