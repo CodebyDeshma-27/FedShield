@@ -273,9 +273,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Contact & Support
 
-- 📧 Email: [your-email@example.com]
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/fraud-intelligence-network/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/fraud-intelligence-network/discussions)
+- 📧 Email: [deshma2027@gmail.com] [shreyasonpavane.18@gmail.com]
+- 🐛 Issues: [GitHub Issues](https://github.com/CodebyDeshma-27/FedShield/issues)
+
 
 ---
 
