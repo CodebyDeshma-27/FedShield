@@ -24,6 +24,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Suppress verbose logs from dependencies
+logging.getLogger('alembic').setLevel(logging.WARNING)
+logging.getLogger('sqlalchemy').setLevel(logging.WARNING)
+logging.getLogger('urllib3').setLevel(logging.WARNING)
+
 # Initialize Flask app
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
@@ -454,17 +459,290 @@ def batch_predict():
         }), 500
 
 
+# ============================
+# METRICS & RESULTS ENDPOINTS
+# ============================
+
+@app.route('/metrics', methods=['GET'])
+def get_metrics():
+    """
+    Get all model metrics from pipeline results
+    Returns metrics for centralized, federated, and DP-protected models
+    """
+    try:
+        import json
+        results_path = "results/pipeline_results.json"
+        
+        if not os.path.exists(results_path):
+            return jsonify({
+                "error": "Results not found",
+                "message": "Run the pipeline first to generate results"
+            }), 404
+        
+        with open(results_path, 'r') as f:
+            results = json.load(f)
+        
+        # Extract model metrics
+        models = results.get('models', {})
+        
+        return jsonify({
+            "status": "success",
+            "models": models,
+            "timestamp": results.get('timestamp')
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Failed to get metrics: {str(e)}")
+        return jsonify({
+            "error": f"Failed to get metrics: {str(e)}"
+        }), 500
+
+
+@app.route('/metrics/comparison', methods=['GET'])
+def get_metrics_comparison():
+    """
+    Get comparison of all three models
+    Perfect for dashboard charts
+    """
+    try:
+        import json
+        results_path = "results/pipeline_results.json"
+        
+        if not os.path.exists(results_path):
+            return jsonify({
+                "error": "Results not found"
+            }), 404
+        
+        with open(results_path, 'r') as f:
+            results = json.load(f)
+        
+        models = results.get('models', {})
+        
+        # Format for React Recharts
+        comparison_data = {
+            "models": [],
+            "metrics_available": ["accuracy", "precision", "recall", "f1_score", "auc_roc"]
+        }
+        
+        for model_name, model_metrics in models.items():
+            comparison_data["models"].append({
+                "name": model_name.replace('_', ' ').title(),
+                "accuracy": round(model_metrics.get('accuracy', 0) * 100, 2),
+                "precision": round(model_metrics.get('precision', 0) * 100, 2),
+                "recall": round(model_metrics.get('recall', 0) * 100, 2),
+                "f1_score": round(model_metrics.get('f1_score', 0) * 100, 2),
+                "auc_roc": round(model_metrics.get('auc_roc', 0) * 100, 2),
+                "status": model_metrics.get('status', 'unknown')
+            })
+        
+        return jsonify(comparison_data), 200
+        
+    except Exception as e:
+        logger.error(f"Failed to get metrics comparison: {str(e)}")
+        return jsonify({
+            "error": f"Failed to get comparison: {str(e)}"
+        }), 500
+
+
+@app.route('/metrics/detailed/<model_type>', methods=['GET'])
+def get_detailed_metrics(model_type):
+    """
+    Get detailed metrics for a specific model
+    model_type: centralized, federated, or dp_protected
+    """
+    try:
+        import json
+        results_path = "results/pipeline_results.json"
+        
+        if not os.path.exists(results_path):
+            return jsonify({"error": "Results not found"}), 404
+        
+        with open(results_path, 'r') as f:
+            results = json.load(f)
+        
+        models = results.get('models', {})
+        model_key = model_type.lower().replace('-', '_')
+        
+        if model_key not in models:
+            return jsonify({
+                "error": f"Model {model_type} not found",
+                "available_models": list(models.keys())
+            }), 404
+        
+        model_data = models[model_key]
+        
+        # Add privacy info if DP model
+        if 'dp_protected' in model_key:
+            model_data['privacy_info'] = {
+                "epsilon": model_data.get('privacy_epsilon', 'N/A'),
+                "delta": model_data.get('privacy_delta', 'N/A'),
+                "protected": True
+            }
+        
+        return jsonify({
+            "model": model_key,
+            "metrics": model_data,
+            "raw_format": {
+                "accuracy": model_data.get('accuracy'),
+                "precision": model_data.get('precision'),
+                "recall": model_data.get('recall'),
+                "f1_score": model_data.get('f1_score'),
+                "auc_roc": model_data.get('auc_roc')
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Failed to get detailed metrics: {str(e)}")
+        return jsonify({
+            "error": str(e)
+        }), 500
+
+
+@app.route('/metrics/attacks', methods=['GET'])
+def get_attack_metrics():
+    """
+    Get attack evaluation results
+    Shows vulnerability of models to different attacks
+    """
+    try:
+        import json
+        attack_path = "results/attack_evaluation_results.json"
+        
+        if not os.path.exists(attack_path):
+            return jsonify({
+                "error": "Attack evaluation results not found",
+                "message": "Run attack evaluation first"
+            }), 404
+        
+        with open(attack_path, 'r') as f:
+            attack_results = json.load(f)
+        
+        return jsonify({
+            "status": "success",
+            "attack_evaluation": attack_results,
+            "timestamp": attack_results.get('timestamp')
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Failed to get attack metrics: {str(e)}")
+        return jsonify({
+            "error": str(e)
+        }), 500
+
+
+@app.route('/metrics/summary', methods=['GET'])
+def get_summary():
+    """
+    Get summary of pipeline execution
+    Dataset stats, model counts, results status
+    """
+    try:
+        import json
+        results_path = "results/pipeline_results.json"
+        
+        if not os.path.exists(results_path):
+            return jsonify({"error": "Results not found"}), 404
+        
+        with open(results_path, 'r') as f:
+            results = json.load(f)
+        
+        summary = {
+            "pipeline_status": results.get('pipeline_status'),
+            "timestamp": results.get('timestamp'),
+            "data_summary": results.get('data'),
+            "models_count": len(results.get('models', {})),
+            "models_trained": list(results.get('models', {}).keys())
+        }
+        
+        return jsonify(summary), 200
+        
+    except Exception as e:
+        logger.error(f"Failed to get summary: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/graphs/<graph_name>', methods=['GET'])
+def get_graph(graph_name):
+    """
+    Serve graph images
+    Available graphs: centralized_accuracy, federated_accuracy, etc.
+    
+    Returns: Base64 encoded image or file stream
+    """
+    try:
+        import base64
+        from pathlib import Path
+        
+        # Sanitize graph name
+        safe_name = ''.join(c for c in graph_name if c.isalnum() or c in ('_', '-'))
+        graph_path = f"results/graphs/{safe_name}.png"
+        
+        if not os.path.exists(graph_path):
+            return jsonify({
+                "error": f"Graph not found: {safe_name}",
+                "available_graphs": ["centralized_accuracy"]
+            }), 404
+        
+        # Read and encode image as base64
+        with open(graph_path, 'rb') as f:
+            image_data = base64.b64encode(f.read()).decode()
+        
+        return jsonify({
+            "graph": safe_name,
+            "format": "png",
+            "data_uri": f"data:image/png;base64,{image_data}"
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Failed to get graph: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/export/results', methods=['GET'])
+def export_results():
+    """
+    Export all results as JSON
+    Useful for downloading full report
+    """
+    try:
+        import json
+        results_path = "results/pipeline_results.json"
+        
+        if not os.path.exists(results_path):
+            return jsonify({"error": "Results not found"}), 404
+        
+        with open(results_path, 'r') as f:
+            results = json.load(f)
+        
+        return jsonify({
+            "status": "success",
+            "data": results,
+            "exported_at": datetime.now().isoformat()
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Failed to export results: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
 @app.errorhandler(404)
 def not_found(error):
     """Handle 404 errors"""
     return jsonify({
         "error": "Endpoint not found",
         "available_endpoints": [
-            "/health",
-            "/info",
-            "/privacy",
-            "/predict",
-            "/batch-predict"
+            "/health - Server health check",
+            "/info - API information",
+            "/privacy - Privacy configuration",
+            "/predict - Single transaction prediction",
+            "/batch-predict - Batch prediction",
+            "/metrics - All model metrics",
+            "/metrics/comparison - Compare all models",
+            "/metrics/detailed/<model_type> - Detailed metrics for specific model",
+            "/metrics/attacks - Attack evaluation results",
+            "/metrics/summary - Pipeline execution summary",
+            "/graphs/<graph_name> - Get graph images",
+            "/export/results - Export full results"
         ]
     }), 404
 

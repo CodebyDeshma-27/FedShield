@@ -3,8 +3,17 @@ Main Execution Script
 Run the complete Privacy-Preserving Fraud Detection System
 """
 
-import argparse
+import sys
 import logging
+
+# Suppress noisy logs from dependencies FIRST
+logging.basicConfig(level=logging.CRITICAL, force=True)
+logging.getLogger('alembic').setLevel(logging.CRITICAL)
+logging.getLogger('alembic.runtime').setLevel(logging.CRITICAL)
+logging.getLogger('alembic.runtime.plugins').setLevel(logging.CRITICAL)
+logging.getLogger('sqlalchemy').setLevel(logging.CRITICAL)
+
+import argparse
 import numpy as np
 import torch
 from pathlib import Path
@@ -16,11 +25,19 @@ from federated.client import create_client_fn, PrivateBankClient
 from federated.server import FederatedServer
 from utils.trainer import Trainer
 
+# NOW set logging to INFO for our output
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    force=True
 )
 logger = logging.getLogger(__name__)
+
+# Keep dependency logs suppressed
+logging.getLogger('alembic').setLevel(logging.CRITICAL)
+logging.getLogger('alembic.runtime').setLevel(logging.CRITICAL)
+logging.getLogger('alembic.runtime.plugins').setLevel(logging.CRITICAL)
+logging.getLogger('sqlalchemy').setLevel(logging.CRITICAL)
 
 
 def setup_directories():
@@ -361,16 +378,24 @@ def main(args):
         if 'privacy_epsilon' in metrics:
             logger.info(f"  Privacy ε: {metrics['privacy_epsilon']}")
     
+    # 5. Save results using ResultsManager
+    from utils.results_manager import ResultsManager
+    
+    results_manager = ResultsManager()
+    
+    # Save metrics for each model
+    logger.info("\n📊 Saving results visualization...")
+    results_manager.save_all_models_csv(results)
+    results_manager.save_model_comparison_plots(results)
+    
     logger.info("\n✅ Execution complete!")
     logger.info("📁 Results saved to results/ directory")
-    
-    return results
+    logger.info("📊 Graphs saved → results/graphs/")
+    logger.info("📄 Tables saved → results/tables/")
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description='Privacy-Preserving Cross-Bank Fraud Detection'
-    )
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Privacy-Preserving Fraud Detection')
     
     parser.add_argument(
         '--mode',
@@ -412,4 +437,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     # Run main
-    results = main(args)
+    main(args)

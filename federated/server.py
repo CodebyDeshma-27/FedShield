@@ -19,6 +19,11 @@ from config import FL_CONFIG
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Suppress verbose logs from dependencies
+logging.getLogger('alembic').setLevel(logging.WARNING)
+logging.getLogger('sqlalchemy').setLevel(logging.WARNING)
+logging.getLogger('urllib3').setLevel(logging.WARNING)
+
 
 class SecureAggregationStrategy(FedAvg):
     """
@@ -57,6 +62,7 @@ class SecureAggregationStrategy(FedAvg):
         
         self.use_secure_aggregation = use_secure_aggregation
         self.round_metrics = []
+        self.final_parameters = None  # Store final aggregated parameters
         
         logger.info(f"Initialized {'Secure' if use_secure_aggregation else 'Standard'} "
                    f"Aggregation Strategy")
@@ -86,6 +92,10 @@ class SecureAggregationStrategy(FedAvg):
             server_round, results, failures
         )
         
+        # Store final parameters for later use
+        if aggregated_parameters:
+            self.final_parameters = aggregated_parameters
+        
         # Log aggregation info
         num_clients = len(results)
         logger.info(f"Round {server_round}: Aggregated updates from {num_clients} banks")
@@ -113,21 +123,27 @@ class SecureAggregationStrategy(FedAvg):
         avg_accuracy = float(np.mean(accuracies))
         avg_f1 = float(np.mean(f1_scores))
 
+        # Handle NaN values in loss
+        loss_value = float(loss_aggregated) if loss_aggregated is not None else 0.0
+        # Check if loss is NaN and replace with None for JSON serialization
+        if np.isnan(loss_value) or np.isinf(loss_value):
+            loss_value = None
+        
         round_metric = {
-        "round": server_round,
-        "loss": float(loss_aggregated) if loss_aggregated is not None else 0.0,
-        "accuracy": avg_accuracy,
-        "f1_score": avg_f1,
-        "num_banks": len(results),
+            "round": server_round,
+            "loss": loss_value,
+            "accuracy": avg_accuracy,
+            "f1_score": avg_f1,
+            "num_banks": len(results),
         }
 
         self.round_metrics.append(round_metric)
 
         logger.info(
-        f"Round {server_round} Evaluation: "
-        f"Loss={round_metric['loss']:.4f}, "
-        f"Acc={avg_accuracy:.4f}, "
-        f"F1={avg_f1:.4f}"
+            f"Round {server_round} Evaluation: "
+            f"Loss={loss_value if loss_value else 'N/A'}, "
+            f"Acc={avg_accuracy:.4f}, "
+            f"F1={avg_f1:.4f}"
         )
 
         # Ensure aggregated metrics dict exists
@@ -356,10 +372,8 @@ class FederatedServer:
         # ==============================
 
         try:
-            if history and history.parameters_centralized:
-                final_parameters = history.parameters_centralized[-1]
-            else:
-                final_parameters = None
+            # Get final parameters from strategy instead of history
+            final_parameters = self.strategy.final_parameters if self.strategy.final_parameters else None
 
             if final_parameters is not None:
 
