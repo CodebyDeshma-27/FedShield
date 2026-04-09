@@ -4,6 +4,7 @@ Production-grade REST API for fraud detection predictions
 """
 
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import torch
 import numpy as np
 import logging
@@ -33,6 +34,9 @@ logging.getLogger('urllib3').setLevel(logging.WARNING)
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
 
+# Enable CORS for frontend integration
+CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:3000", "http://127.0.0.1:5173", "http://127.0.0.1:5174"]}})
+
 # Global variables for model and device
 MODEL = None
 DEVICE = None
@@ -41,37 +45,47 @@ MODEL_PATH = None
 
 def load_model():
     """
-    Load the DP-protected fraud detection model
-    Called once on startup
+    Load the fraud detection model.
+    Tries the DP-protected model first, then falls back to available trained models.
+    Called once on startup.
     """
     global MODEL, DEVICE, MODEL_PATH
     
     try:
-        # Use DP-protected model (production model)
-        MODEL_PATH = "results/models/dp_protected_model.pth"
-        
+        candidate_paths = [
+            "results/models/dp_protected_model.pth",
+            "results/models/federated_model.pth",
+            "results/models/centralized_model.pth",
+        ]
+
+        MODEL_PATH = None
+        for path_candidate in candidate_paths:
+            if os.path.exists(path_candidate):
+                MODEL_PATH = path_candidate
+                break
+
+        if MODEL_PATH is None:
+            missing = ", ".join(candidate_paths)
+            logger.error(f"No trained model found. Checked: {missing}")
+            raise FileNotFoundError(
+                "No trained model found. Run the training pipeline or place a model in results/models/."
+            )
+
         logger.info(f"Loading model from: {MODEL_PATH}")
-        
-        # Check if model exists
-        if not os.path.exists(MODEL_PATH):
-            logger.error(f"Model file not found: {MODEL_PATH}")
-            raise FileNotFoundError(f"Model file not found: {MODEL_PATH}")
-        
+
         # Determine device (GPU if available, else CPU)
         DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         logger.info(f"Using device: {DEVICE}")
-        
+
         # Load model using ModelUtils
         MODEL = ModelUtils.load_model(MODEL_PATH)
-        
-        # Set to evaluation mode (no training)
         MODEL.eval()
-        
+
         logger.info("✅ Model loaded successfully!")
         logger.info(f"Model architecture: {MODEL}")
-        
+
         return True
-        
+
     except Exception as e:
         logger.error(f"❌ Failed to load model: {str(e)}")
         logger.exception(e)

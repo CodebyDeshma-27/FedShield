@@ -7,9 +7,13 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from imblearn.over_sampling import SMOTE
 from typing import Dict, List, Tuple
 import logging
+
+try:
+    from imblearn.over_sampling import SMOTE
+except ImportError:  # pragma: no cover
+    SMOTE = None
 
 from config import DATA_CONFIG, RANDOM_SEED
 
@@ -126,6 +130,13 @@ class DataHandler:
         if not self.config['balance_data']:
             return X, y
         
+        if SMOTE is None:
+            logger.warning(
+                "imbalanced-learn is not installed, so SMOTE balancing is disabled. "
+                "Install imbalanced-learn to enable SMOTE support."
+            )
+            return X, y
+
         logger.info("Balancing dataset using SMOTE...")
         original_counts = np.bincount(y.astype(int))
         

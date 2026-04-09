@@ -222,17 +222,50 @@ class ModelUtils:
         logger.info(f"Model saved to {path}")
     
     @staticmethod
+    def _model_config_from_checkpoint(checkpoint: dict) -> dict:
+        config = checkpoint.get('model_config')
+        if config is not None:
+            return {
+                'input_dim': config.get('input_dim', MODEL_CONFIG['input_dim']),
+                'hidden_layers': config.get('hidden_layers', MODEL_CONFIG['hidden_layers']),
+                'output_dim': config.get('output_dim', MODEL_CONFIG['output_dim']),
+                'dropout_rate': config.get('dropout_rate', MODEL_CONFIG['dropout_rate']),
+                'batch_norm': config.get('batch_norm', MODEL_CONFIG.get('batch_norm', True)),
+            }
+
+        logger.warning("Checkpoint does not include model_config; falling back to MODEL_CONFIG.")
+        return {
+            'input_dim': MODEL_CONFIG['input_dim'],
+            'hidden_layers': MODEL_CONFIG['hidden_layers'],
+            'output_dim': MODEL_CONFIG['output_dim'],
+            'dropout_rate': MODEL_CONFIG['dropout_rate'],
+            'batch_norm': MODEL_CONFIG.get('batch_norm', True),
+        }
+
+    @staticmethod
     def load_model(path: str, model_class=FraudDetectorNN) -> nn.Module:
         """Load model from disk"""
         checkpoint = torch.load(path)
-        
-        # Create model with saved config
-        config = checkpoint['model_config']
+
+        if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+            state_dict = checkpoint['model_state_dict']
+            config = ModelUtils._model_config_from_checkpoint(checkpoint)
+        elif isinstance(checkpoint, dict) and all(isinstance(k, str) for k in checkpoint.keys()):
+            state_dict = checkpoint
+            config = {
+                'input_dim': MODEL_CONFIG['input_dim'],
+                'hidden_layers': MODEL_CONFIG['hidden_layers'],
+                'output_dim': MODEL_CONFIG['output_dim'],
+                'dropout_rate': MODEL_CONFIG['dropout_rate'],
+                'batch_norm': MODEL_CONFIG.get('batch_norm', True),
+            }
+            logger.warning("Loaded legacy state dict checkpoint without model_config; using default MODEL_CONFIG.")
+        else:
+            raise ValueError("Unsupported checkpoint format for model loading.")
+
         model = model_class(**config)
-        
-        # Load state dict
-        model.load_state_dict(checkpoint['model_state_dict'])
-        
+        model.load_state_dict(state_dict)
+
         logger.info(f"Model loaded from {path}")
         return model
 
